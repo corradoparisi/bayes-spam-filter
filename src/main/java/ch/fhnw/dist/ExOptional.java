@@ -4,7 +4,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * inspired by scala Try/Option
+ * java does not have Try,Optional
  */
 public class ExOptional {
     public static <T> Optional<T> of(ExSupplier<T> tSupplier) {
