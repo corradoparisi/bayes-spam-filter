@@ -1,41 +1,30 @@
 package ch.fhnw.dist;
 
-import java.nio.file.FileSystems;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.Normalizer;
-import java.util.Arrays;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public class BayesSpamFilter {
-    private static final boolean parallel = true;
+    private final Map<String, Double> corpus;
 
-    static String cleanStr(String s) {
-        return Normalizer
-                .normalize((s.toLowerCase()), Normalizer.Form.NFD)
-                .replaceAll("[^\\p{ASCII}]", "")
-                .replaceAll("[^\\dA-Za-z ]", "");
+    public BayesSpamFilter(Map<String, Double> corpus) {
+        this.corpus = corpus;
     }
 
-    public static void main(String[] args) throws Exception {
-        documentFrequency(Paths.get("../ham-anlern.zip")).forEach((s, aLong) -> System.out.println(s + " : " + aLong));
-        documentFrequency(Paths.get("../spam-anlern.zip")).forEach((s, aLong) -> System.out.println(s + " : " + aLong));
+    static BayesSpamFilter load(Path corpusFile) throws IOException {
+        //TODO maybe add a better split character
+        var corpus = Files.readAllLines(corpusFile).stream().map(s -> s.split("=")).collect(Collectors.toMap(strings -> strings[0], strings -> Double.valueOf(strings[1])));
+        return new BayesSpamFilter(corpus);
     }
 
-    static Map<String, Long> documentFrequency(Path zip) throws Exception {
-        return StreamSupport.stream(FileSystems.newFileSystem(zip, ClassLoader.getPlatformClassLoader())
-                .getRootDirectories()
-                .spliterator(), parallel)
-                .flatMap(root -> ExOptional.orElse(() -> Files.walk(root), Stream::empty))
-                .map(path -> ExOptional.orElse(() -> Files.readString(path), () -> ""))
-                .map(BayesSpamFilter::cleanStr)
-                .map(s -> s.split(" "))
-                .flatMap(strings -> Arrays.stream(strings).distinct())
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+    boolean isSpam(String text) {
+        return scoreText(text) > 0.5;
+    }
+
+    double scoreText(String text) {
+        //TODO implement scoring algorithm
+        return 0.5;
     }
 }
