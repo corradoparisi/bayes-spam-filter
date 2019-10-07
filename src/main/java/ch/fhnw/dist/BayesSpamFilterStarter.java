@@ -2,13 +2,14 @@ package ch.fhnw.dist;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 public class BayesSpamFilterStarter {
     private static final Path data = Paths.get("data");
+    private static String hamZipTrainData = "ham-anlern.zip";
+    private static String spamZipTrainData = "spam-anlern.zip";
 
     public static void main(String[] args) throws Exception {
-        Map<String, Double> train = BayesSpamFilterTrain.train(data);
-        BayesSpamFilterTrain.validate(data.resolve("ham-anlern.zip"),data.resolve("spam-anlern.zip"))
+        BayesSpamFilter bayesSpamFilter = BayesSpamFilterTrain.train(data.resolve(hamZipTrainData), data.resolve(spamZipTrainData));
+        BayesSpamFilterTrain.validate(bayesSpamFilter, data.resolve(hamZipTrainData),data.resolve(spamZipTrainData));
     }
 }

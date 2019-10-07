@@ -22,17 +22,18 @@ public class BayesSpamFilterTrain {
         return s.toLowerCase();
     }
 
-    public static Map<String, Double> train(Path root) throws Exception {
-        var ham = documentProbability(root.resolve("ham-anlern.zip"));
-        var spam = documentProbability(root.resolve("spam-anlern.zip"));
+    public static BayesSpamFilter train(Path hamPath, Path spamPath) throws Exception {
+        var ham = documentProbability(hamPath);
+        var spam = documentProbability(spamPath);
         var keySet = ham.keySet();
         keySet.addAll(spam.keySet());
-        return keySet.parallelStream().map(key -> {
-            var hamD = get(key, ham) * PR_H;
-            var spamD = get(key, spam) * PR_S;
-            return new Tuple2<>(key, spamD / (spamD * hamD));
-
-        }).collect(Collectors.toMap(t -> t.t1, t -> t.t2));
+        return new BayesSpamFilter(
+                keySet.parallelStream().map(key -> {
+                    var hamD = get(key, ham) * PR_H;
+                    var spamD = get(key, spam) * PR_S;
+                    return new Tuple2<>(key, spamD / (spamD * hamD));
+                }).collect(Collectors.toMap(t -> t.t1, t -> t.t2))
+        );
     }
 
     private static double get(String key, Map<String, Double> ham) {
@@ -69,7 +70,24 @@ public class BayesSpamFilterTrain {
                 .collect(Collectors.toMap(t -> t.t1, t -> t.t2));
     }
 
-    public static void validate(Path ham, Path spam) {
+    public static Tuple2<Double, Double> validate(BayesSpamFilter bayesSpamFilter, Path ham, Path spam) throws Exception {
+        double documentCount = validate(bayesSpamFilter, ham);
+        double spamCount = validate(bayesSpamFilter, spam);
+        System.out.println("Document count " + documentCount);
+        System.out.println("Spam count " + spamCount);
+        return new Tuple2<>(documentCount, spamCount);
+    }
 
+    // TODO document
+    private static double validate(BayesSpamFilter bayesSpamFilter, Path zip) throws Exception {
+        double documentCount = count(zip);
+        double spamCount = StreamSupport.stream(FileSystems.newFileSystem(zip, ClassLoader.getPlatformClassLoader())
+                .getRootDirectories()
+                .spliterator(), true)
+                .flatMap(root -> ExOptional.orElse(() -> Files.walk(root), Stream::empty))
+                .map(path -> ExOptional.orElse(() -> Files.readString(path), () -> ""))
+                .filter(bayesSpamFilter::isSpam)
+                .count();
+        return spamCount / documentCount;
     }
 }
