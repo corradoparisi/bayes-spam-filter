@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import static ch.fhnw.dist.BayesSpamFilterTrain.cleanStr;
 
 class BayesSpamFilter {
-    static Double THREASHOLD = 0.5;
+    static Double THRESHOLD = 0.5;
     private final Map<String, Double> corpus;
 
     public BayesSpamFilter(Map<String, Double> corpus) {
@@ -17,7 +17,7 @@ class BayesSpamFilter {
     }
 
     boolean isSpam(String text) {
-        return scoreText(text) > THREASHOLD;
+        return scoreText(text) > THRESHOLD;
     }
 
     double scoreText(String s) {

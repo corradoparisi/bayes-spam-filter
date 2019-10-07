@@ -17,16 +17,16 @@ public class BayesSpamFilterStarter {
     public static void main(String[] args) throws Exception {
         BayesSpamFilterTrain.DEBUG_CORPUS = false;
         BayesSpamFilterTrain.PR_S = 0.5;
-        BayesSpamFilter.THREASHOLD = 0.90;
+        BayesSpamFilter.THRESHOLD = 0.90;
         System.out.println("BayesSpamFilterTrain.PR_S = " + BayesSpamFilterTrain.PR_S);
-        System.out.println("BayesSpamFilter.THREASHOLD = " + BayesSpamFilter.THREASHOLD);
+        System.out.println("BayesSpamFilter.THRESHOLD = " + BayesSpamFilter.THRESHOLD);
         BayesSpamFilter bayesSpamFilter = BayesSpamFilterTrain.train(hamZipTrainData, spamZipTrainData);
         System.out.println("Training Set: ");
         BayesSpamFilterTrain.printValidationStatistics(bayesSpamFilter, hamZipTrainData, spamZipTrainData);
-        System.out.println("");
+        System.out.println();
         System.out.println("Validation Set");
         BayesSpamFilterTrain.printValidationStatistics(bayesSpamFilter, hamCalibration, spamCalibration);
-        System.out.println("");
+        System.out.println();
         System.out.println("Test Set");
         BayesSpamFilterTrain.printValidationStatistics(bayesSpamFilter, hamTest, spamTest);
     }
