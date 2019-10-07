@@ -3,9 +3,6 @@ package ch.fhnw.dist;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-/**
- * java does not have Try,Optional
- */
 public class ExOptional {
     public static <T> Optional<T> of(ExSupplier<T> tSupplier) {
         try {

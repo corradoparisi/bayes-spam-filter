@@ -3,7 +3,6 @@ package ch.fhnw.dist;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.Normalizer;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -14,19 +13,12 @@ import java.util.stream.StreamSupport;
 
 class BayesSpamFilterTrain {
 
-    /**
-     * 0.8 gives better recall value
-     */
     static Double PR_S = 0.5;
-
     private static final Double PR_H = 1.0 - PR_S;
+    static Boolean DEBUG_CORPUS = false;
 
     static String cleanStr(String s) {
-        String emptyChar = "";
-        return Normalizer
-                .normalize((s.toLowerCase()), Normalizer.Form.NFD)
-                .replaceAll("[^\\p{ASCII}]", emptyChar)
-                .replaceAll("[^\\dA-Za-z ]", emptyChar);
+        return s.toLowerCase();
     }
 
     static BayesSpamFilter train(Path hamPath, Path spamPath) throws Exception {
@@ -40,7 +32,12 @@ class BayesSpamFilterTrain {
             var Pr_WS = get(key, spam);
             return new Tuple2<>(key, Pr_WS * PR_S / (Pr_WS * PR_S + Pr_WH * PR_H));
         }).collect(Collectors.toMap(t -> t.t1, t -> t.t2));
-        collect.entrySet().stream().filter(stringDoubleEntry -> stringDoubleEntry.getValue() > 0.55 || stringDoubleEntry.getValue() < 0.45).forEach((keyValue) -> System.out.println(keyValue.getKey() + keyValue.getValue()));
+        if (DEBUG_CORPUS) {
+            collect.entrySet().stream()
+                    .filter(stringDoubleEntry -> stringDoubleEntry.getValue() > 0.55 || stringDoubleEntry.getValue() < 0.45)
+                    .forEach((keyValue) -> System.out.println(keyValue.getKey() + keyValue.getValue()));
+        }
+
         return new BayesSpamFilter(collect);
     }
 
@@ -60,9 +57,9 @@ class BayesSpamFilterTrain {
         System.out.println("Spam count " + spamCount);
 
         System.out.println("True positives " + truePositives);
+        System.out.println("False negatives " + falseNegatives);
         System.out.println("False positives " + falsePositives);
         System.out.println("True negatives " + trueNegatives);
-        System.out.println("False negatives " + falseNegatives);
 
         System.out.println("Precision " + precision);
         System.out.println("Recall " + recall);
@@ -116,7 +113,7 @@ class BayesSpamFilterTrain {
                 .spliterator(), true)
                 .flatMap(root -> ExOptional.orElse(() -> Files.walk(root), Stream::empty))
                 .map(path -> ExOptional.orElse(() -> Files.readString(path), () -> ""))
-                .filter(text -> !bayesSpamFilter.isSpam(text))
+                .filter(bayesSpamFilter::isSpam)
                 .count();
         return new Tuple2<>(documentCount, spamCount);
     }

@@ -15,17 +15,18 @@ public class BayesSpamFilterStarter {
     private static final Path spamTest = data.resolve("spam-test.zip");
 
     public static void main(String[] args) throws Exception {
-
-        /*
-          The value 0.8 provides better recall result than given 0.5
-         */
-        BayesSpamFilterTrain.PR_S = 0.8;
-
-        BayesSpamFilter bayesSpamFilter = BayesSpamFilterTrain.train(hamZipTrainData,spamZipTrainData);
-        System.out.println("Training Set");
+        BayesSpamFilterTrain.DEBUG_CORPUS = false;
+        BayesSpamFilterTrain.PR_S = 0.5;
+        BayesSpamFilter.THREASHOLD = 0.90;
+        System.out.println("BayesSpamFilterTrain.PR_S = " + BayesSpamFilterTrain.PR_S);
+        System.out.println("BayesSpamFilter.THREASHOLD = " + BayesSpamFilter.THREASHOLD);
+        BayesSpamFilter bayesSpamFilter = BayesSpamFilterTrain.train(hamZipTrainData, spamZipTrainData);
+        System.out.println("Training Set: ");
         BayesSpamFilterTrain.printValidationStatistics(bayesSpamFilter, hamZipTrainData, spamZipTrainData);
+        System.out.println("");
         System.out.println("Validation Set");
         BayesSpamFilterTrain.printValidationStatistics(bayesSpamFilter, hamCalibration, spamCalibration);
+        System.out.println("");
         System.out.println("Test Set");
         BayesSpamFilterTrain.printValidationStatistics(bayesSpamFilter, hamTest, spamTest);
     }
