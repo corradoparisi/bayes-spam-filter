@@ -17,7 +17,7 @@ public class BayesSpamFilterStarter {
     public static void main(String[] args) throws Exception {
 
         /*
-          The value 0.8 provides better recall result than giver 0.5
+          The value 0.8 provides better recall result than given 0.5
          */
         BayesSpamFilterTrain.PR_S = 0.8;
 
