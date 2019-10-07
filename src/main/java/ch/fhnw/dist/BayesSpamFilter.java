@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static ch.fhnw.dist.BayesSpamFilterTrain.cleanStr;
+
 class BayesSpamFilter {
     private final Map<String, Double> corpus;
 
@@ -31,8 +33,7 @@ class BayesSpamFilter {
 
     double scoreText(String s) {
         //TODO not sure if this is correct?
-        String whitespace = "\\s+";
-        List<Double> scores = Arrays.stream(s.toLowerCase().split(whitespace))
+        List<Double> scores = Arrays.stream(cleanStr(s).split("\\s+"))
                 .parallel()
                 .map(corpus::get)
                 .filter(Objects::nonNull).collect(Collectors.toList());

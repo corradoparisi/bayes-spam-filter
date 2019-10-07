@@ -16,9 +16,11 @@ public class BayesSpamFilterStarter {
 
     public static void main(String[] args) throws Exception {
         BayesSpamFilter bayesSpamFilter = BayesSpamFilterTrain.train(hamZipTrainData,spamZipTrainData);
+        System.out.println("Training Set");
         BayesSpamFilterTrain.printValidationStatistics(bayesSpamFilter, hamZipTrainData, spamZipTrainData);
-
+        System.out.println("Validation Set");
         BayesSpamFilterTrain.printValidationStatistics(bayesSpamFilter, hamCallibration, spamCallibration);
+        System.out.println("Test Set");
         BayesSpamFilterTrain.printValidationStatistics(bayesSpamFilter, hamTest, spamTest);
     }
 }

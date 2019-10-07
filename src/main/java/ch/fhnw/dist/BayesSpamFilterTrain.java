@@ -1,8 +1,11 @@
 package ch.fhnw.dist;
 
+import org.w3c.dom.ls.LSOutput;
+
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.Normalizer;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -16,11 +19,11 @@ public class BayesSpamFilterTrain {
     private static final Double PR_H = 1.0 - PR_S;
 
     static String cleanStr(String s) {
-//        return Normalizer
-//                .normalize((s.toLowerCase()), Normalizer.Form.NFD)
-//                .replaceAll("[^\\p{ASCII}]", "")
-//                .replaceAll("[^\\dA-Za-z ]", "");
-        return s.toLowerCase();
+        return Normalizer
+                .normalize((s.toLowerCase()), Normalizer.Form.NFD)
+                .replaceAll("[^\\p{ASCII}]", "")
+                .replaceAll("[^\\dA-Za-z ]", "");
+       // return s.toLowerCase();
     }
 
     public static BayesSpamFilter train(Path hamPath, Path spamPath) throws Exception {
@@ -29,13 +32,13 @@ public class BayesSpamFilterTrain {
         var keySet = ham.keySet();
         keySet = new HashSet<>(keySet);
         keySet.addAll(spam.keySet());
-        return new BayesSpamFilter(
-                keySet.parallelStream().map(key -> {
-                    var hamD = get(key, ham) * PR_H;
-                    var spamD = get(key, spam) * PR_S;
-                    return new Tuple2<>(key, spamD / (spamD * hamD));
-                }).collect(Collectors.toMap(t -> t.t1, t -> t.t2))
-        );
+        var collect = keySet.parallelStream().map(key -> {
+            var Pr_WH = get(key, ham);
+            var Pr_WS = get(key, spam);
+            return new Tuple2<>(key, Pr_WS * PR_S / (Pr_WS * PR_S + Pr_WH * PR_H));
+        }).collect(Collectors.toMap(t -> t.t1, t -> t.t2));
+        collect.entrySet().stream().filter(stringDoubleEntry -> stringDoubleEntry.getValue() > 0.55 || stringDoubleEntry.getValue() < 0.45).forEach((keyValue) -> System.out.println(keyValue.getKey() + keyValue.getValue()));
+        return new BayesSpamFilter(collect);
     }
 
     private static double get(String key, Map<String, Double> ham) {
@@ -58,7 +61,10 @@ public class BayesSpamFilterTrain {
                 .map(path -> ExOptional.orElse(() -> Files.readString(path), () -> ""))
                 .map(BayesSpamFilterTrain::cleanStr)
                 //TODO maybe use a hash for perfomance etc.
-                .map(s -> s.split("\\s+"))
+                .map(s -> {
+                    String whitespace = "\\s+";
+                    return s.split(whitespace);
+                })
                 .flatMap(strings -> Arrays.stream(strings).distinct())
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
     }
@@ -106,7 +112,7 @@ public class BayesSpamFilterTrain {
                 .spliterator(), true)
                 .flatMap(root -> ExOptional.orElse(() -> Files.walk(root), Stream::empty))
                 .map(path -> ExOptional.orElse(() -> Files.readString(path), () -> ""))
-                .filter(bayesSpamFilter::isSpam)
+                .filter(text -> !bayesSpamFilter.isSpam(text))
                 .count();
         return new Tuple2<>(documentCount, spamCount);
     }
