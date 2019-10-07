@@ -1,7 +1,5 @@
 package ch.fhnw.dist;
 
-import org.w3c.dom.ls.LSOutput;
-
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,19 +12,24 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class BayesSpamFilterTrain {
-    private static final Double PR_S = 0.5;
+class BayesSpamFilterTrain {
+
+    /**
+     * 0.8 gives better recall value
+     */
+    static Double PR_S = 0.5;
+
     private static final Double PR_H = 1.0 - PR_S;
 
     static String cleanStr(String s) {
+        String emptyChar = "";
         return Normalizer
                 .normalize((s.toLowerCase()), Normalizer.Form.NFD)
-                .replaceAll("[^\\p{ASCII}]", "")
-                .replaceAll("[^\\dA-Za-z ]", "");
-       // return s.toLowerCase();
+                .replaceAll("[^\\p{ASCII}]", emptyChar)
+                .replaceAll("[^\\dA-Za-z ]", emptyChar);
     }
 
-    public static BayesSpamFilter train(Path hamPath, Path spamPath) throws Exception {
+    static BayesSpamFilter train(Path hamPath, Path spamPath) throws Exception {
         var ham = documentProbability(hamPath);
         var spam = documentProbability(spamPath);
         var keySet = ham.keySet();
@@ -41,44 +44,7 @@ public class BayesSpamFilterTrain {
         return new BayesSpamFilter(collect);
     }
 
-    private static double get(String key, Map<String, Double> ham) {
-        return Math.max(0.01, ham.getOrDefault(key, 0.0));
-    }
-
-    private static long count(Path zip) throws Exception {
-        return StreamSupport.stream(FileSystems.newFileSystem(zip, ClassLoader.getPlatformClassLoader())
-                .getRootDirectories()
-                .spliterator(), true)
-                .flatMap(root -> ExOptional.orElse(() -> Files.walk(root), Stream::empty))
-                .count();
-    }
-
-    private static Map<String, Long> documentFrequency(Path zip) throws Exception {
-        return StreamSupport.stream(FileSystems.newFileSystem(zip, ClassLoader.getPlatformClassLoader())
-                .getRootDirectories()
-                .spliterator(), true)
-                .flatMap(root -> ExOptional.orElse(() -> Files.walk(root), Stream::empty))
-                .map(path -> ExOptional.orElse(() -> Files.readString(path), () -> ""))
-                .map(BayesSpamFilterTrain::cleanStr)
-                //TODO maybe use a hash for perfomance etc.
-                .map(s -> {
-                    String whitespace = "\\s+";
-                    return s.split(whitespace);
-                })
-                .flatMap(strings -> Arrays.stream(strings).distinct())
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-    }
-
-    private static Map<String, Double> documentProbability(Path zip) throws Exception {
-        var count = count(zip);
-        return documentFrequency(zip)
-                .entrySet()
-                .parallelStream()
-                .map(stringLongEntry -> new Tuple2<>(stringLongEntry.getKey(), (stringLongEntry.getValue().doubleValue() / count)))
-                .collect(Collectors.toMap(t -> t.t1, t -> t.t2));
-    }
-
-    public static void printValidationStatistics(BayesSpamFilter bayesSpamFilter, Path ham, Path spam) throws Exception {
+    static void printValidationStatistics(BayesSpamFilter bayesSpamFilter, Path ham, Path spam) throws Exception {
         var hamCount = validate(bayesSpamFilter, ham);
         var spamCount = validate(bayesSpamFilter, spam);
         var truePositives = spamCount.t2; // is spam, classified correctly
@@ -100,6 +66,44 @@ public class BayesSpamFilterTrain {
 
         System.out.println("Precision " + precision);
         System.out.println("Recall " + recall);
+    }
+
+
+    private static double get(String key, Map<String, Double> ham) {
+        return Math.max(0.01, ham.getOrDefault(key, 0.0));
+    }
+
+    private static long count(Path zip) throws Exception {
+        return StreamSupport.stream(FileSystems.newFileSystem(zip, ClassLoader.getPlatformClassLoader())
+                .getRootDirectories()
+                .spliterator(), true)
+                .flatMap(root -> ExOptional.orElse(() -> Files.walk(root), Stream::empty))
+                .count();
+    }
+
+    private static Map<String, Long> documentFrequency(Path zip) throws Exception {
+        return StreamSupport.stream(FileSystems.newFileSystem(zip, ClassLoader.getPlatformClassLoader())
+                .getRootDirectories()
+                .spliterator(), true)
+                .flatMap(root -> ExOptional.orElse(() -> Files.walk(root), Stream::empty))
+                .map(path -> ExOptional.orElse(() -> Files.readString(path), () -> ""))
+                .map(BayesSpamFilterTrain::cleanStr)
+                //TODO could use a hash instead of regex split of whitespace
+                .map(s -> {
+                    String whitespace = "\\s+";
+                    return s.split(whitespace);
+                })
+                .flatMap(strings -> Arrays.stream(strings).distinct())
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+    }
+
+    private static Map<String, Double> documentProbability(Path zip) throws Exception {
+        var count = count(zip);
+        return documentFrequency(zip)
+                .entrySet()
+                .parallelStream()
+                .map(stringLongEntry -> new Tuple2<>(stringLongEntry.getKey(), (stringLongEntry.getValue().doubleValue() / count)))
+                .collect(Collectors.toMap(t -> t.t1, t -> t.t2));
     }
 
     /**
