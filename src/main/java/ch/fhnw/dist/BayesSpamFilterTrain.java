@@ -4,7 +4,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.Normalizer;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Function;
@@ -13,12 +12,15 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class BayesSpamFilterTrain {
+    private static final Double PR_S = 0.5;
+    private static final Double PR_H = 1.0 - PR_S;
 
     static String cleanStr(String s) {
-        return Normalizer
-                .normalize((s.toLowerCase()), Normalizer.Form.NFD)
-                .replaceAll("[^\\p{ASCII}]", "")
-                .replaceAll("[^\\dA-Za-z ]", "");
+//        return Normalizer
+//                .normalize((s.toLowerCase()), Normalizer.Form.NFD)
+//                .replaceAll("[^\\p{ASCII}]", "")
+//                .replaceAll("[^\\dA-Za-z ]", "");
+        return s.toLowerCase();
     }
 
     public static void main(String[] args) throws Exception {
@@ -26,11 +28,16 @@ public class BayesSpamFilterTrain {
     }
 
     public static void train() throws Exception {
-        //TODO generate corpus and write to file
-        //TODO log precission and recall
-        //TODO maybe use murmur hash or something similar to hash the words to increase performance etc.
-        documentFrequency(Paths.get("../ham-anlern.zip")).forEach((s, aLong) -> System.out.println(s + " : " + aLong));
-        documentFrequency(Paths.get("../spam-anlern.zip")).forEach((s, aLong) -> System.out.println(s + " : " + aLong));
+        var ham = documentProbability(Paths.get("../ham-anlern.zip"));
+        var spam = documentProbability(Paths.get("../spam-anlern.zip"));
+        var keySet = ham.keySet();
+        keySet.addAll(spam.keySet());
+        keySet.parallelStream().map(key -> {
+            var hamD = ham.getOrDefault(key, 0.1) * PR_H;
+            var spamD = spam.getOrDefault(key, 0.1) * PR_S;
+
+        });
+        spam.forEach((s, aLong) -> System.out.println(s + " : " + aLong));
     }
 
     private static long count(Path zip) throws Exception {
@@ -58,8 +65,8 @@ public class BayesSpamFilterTrain {
         return documentFrequency(zip)
                 .entrySet()
                 .parallelStream()
-                .map(stringLongEntry -> new Tuple<>(stringLongEntry.getKey(), (stringLongEntry.getValue().doubleValue() / count)))
-                .collect(Collectors.toMap(stringLongTuple -> stringLongTuple.a, stringLongTuple -> stringLongTuple.b));
+                .map(stringLongEntry -> new Tuple2<>(stringLongEntry.getKey(), (stringLongEntry.getValue().doubleValue() / count)))
+                .collect(Collectors.toMap(stringLongTuple -> stringLongTuple.t1, stringLongTuple -> stringLongTuple.t2));
     }
 
 }

@@ -1,15 +1,12 @@
 package ch.fhnw.dist;
 
-import java.util.Arrays;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class BayesSpamFilterStarter {
+    private static final Path data = Paths.get("data");
+
     public static void main(String[] args) {
-        if (Arrays.stream(args).anyMatch(s -> s.contains("train"))) {
-
-        } else if (Arrays.stream(args).anyMatch(s -> s.contains("validate"))) {
-
-        } else {
-            System.out.println("use one of -train -validate");
-        }
+        Path sad = data.resolve("sad");
     }
 }
