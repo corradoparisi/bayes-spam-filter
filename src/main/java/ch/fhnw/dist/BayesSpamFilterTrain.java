@@ -4,6 +4,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -26,6 +27,7 @@ public class BayesSpamFilterTrain {
         var ham = documentProbability(hamPath);
         var spam = documentProbability(spamPath);
         var keySet = ham.keySet();
+        keySet = new HashSet<>(keySet);
         keySet.addAll(spam.keySet());
         return new BayesSpamFilter(
                 keySet.parallelStream().map(key -> {
@@ -70,24 +72,42 @@ public class BayesSpamFilterTrain {
                 .collect(Collectors.toMap(t -> t.t1, t -> t.t2));
     }
 
-    public static Tuple2<Double, Double> validate(BayesSpamFilter bayesSpamFilter, Path ham, Path spam) throws Exception {
-        double documentCount = validate(bayesSpamFilter, ham);
-        double spamCount = validate(bayesSpamFilter, spam);
-        System.out.println("Document count " + documentCount);
+    public static void printValidationStatistics(BayesSpamFilter bayesSpamFilter, Path ham, Path spam) throws Exception {
+        var hamCount = validate(bayesSpamFilter, ham);
+        var spamCount = validate(bayesSpamFilter, spam);
+        var truePositives = spamCount.t2; // is spam, classified correctly
+        var falsePositives = hamCount.t2; // no spam, classified wrongly
+
+        var trueNegatives = hamCount.t1 - hamCount.t2; // no spam, classified correctly
+        var falseNegatives = spamCount.t1 - spamCount.t2; // is spam, classified wrongly
+
+        var precision = truePositives.doubleValue() / (truePositives + falsePositives);
+        var recall = truePositives.doubleValue() / (truePositives + falseNegatives);
+
+        System.out.println("Document count " + hamCount);
         System.out.println("Spam count " + spamCount);
-        return new Tuple2<>(documentCount, spamCount);
+
+        System.out.println("True positives " + truePositives);
+        System.out.println("False positives " + falsePositives);
+        System.out.println("True negatives " + trueNegatives);
+        System.out.println("False negatives " + falseNegatives);
+
+        System.out.println("Precision " + precision);
+        System.out.println("Recall " + recall);
     }
 
-    // TODO document
-    private static double validate(BayesSpamFilter bayesSpamFilter, Path zip) throws Exception {
-        double documentCount = count(zip);
-        double spamCount = StreamSupport.stream(FileSystems.newFileSystem(zip, ClassLoader.getPlatformClassLoader())
+    /**
+     * Returns a Tuple2 where t1 is the documentCount and t2 the spamCount.
+     */
+    private static Tuple2<Long, Long> validate(BayesSpamFilter bayesSpamFilter, Path zip) throws Exception {
+        var documentCount = count(zip);
+        var spamCount = StreamSupport.stream(FileSystems.newFileSystem(zip, ClassLoader.getPlatformClassLoader())
                 .getRootDirectories()
                 .spliterator(), true)
                 .flatMap(root -> ExOptional.orElse(() -> Files.walk(root), Stream::empty))
                 .map(path -> ExOptional.orElse(() -> Files.readString(path), () -> ""))
                 .filter(bayesSpamFilter::isSpam)
                 .count();
-        return spamCount / documentCount;
+        return new Tuple2<>(documentCount, spamCount);
     }
 }
