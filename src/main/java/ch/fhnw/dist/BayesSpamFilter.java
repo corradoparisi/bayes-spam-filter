@@ -3,7 +3,10 @@ package ch.fhnw.dist;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class BayesSpamFilter {
@@ -23,8 +26,14 @@ public class BayesSpamFilter {
         return scoreText(text) > 0.5;
     }
 
-    double scoreText(String text) {
-        //TODO implement scoring algorithm
-        return 0.5;
+    double scoreText(String s) {
+        //TODO not sure if this is correct?
+        List<Double> scores = Arrays.stream(s.toLowerCase().split("\\s+"))
+                .parallel()
+                .map(corpus::get)
+                .filter(Objects::nonNull).collect(Collectors.toList());
+        double reduce = scores.stream().mapToDouble(i -> i).reduce(1, (a, b) -> a * b);
+        double reduce2 = scores.stream().mapToDouble(i -> 1 - i).reduce(1, (a, b) -> a * b);
+        return reduce2 / reduce;
     }
 }
