@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class BayesSpamFilter {
+class BayesSpamFilter {
     private final Map<String, Double> corpus;
 
     public BayesSpamFilter(Map<String, Double> corpus) {
@@ -18,7 +18,10 @@ public class BayesSpamFilter {
 
     static BayesSpamFilter load(Path corpusFile) throws IOException {
         //TODO maybe add a better split character
-        var corpus = Files.readAllLines(corpusFile).stream().map(s -> s.split("=")).collect(Collectors.toMap(strings -> strings[0], strings -> Double.valueOf(strings[1])));
+        var corpus = Files.readAllLines(corpusFile).stream().map(s -> {
+            String splitChar = "=";
+            return s.split(splitChar);
+        }).collect(Collectors.toMap(strings -> strings[0], strings -> Double.valueOf(strings[1])));
         return new BayesSpamFilter(corpus);
     }
 
@@ -28,7 +31,8 @@ public class BayesSpamFilter {
 
     double scoreText(String s) {
         //TODO not sure if this is correct?
-        List<Double> scores = Arrays.stream(s.toLowerCase().split("\\s+"))
+        String whitespace = "\\s+";
+        List<Double> scores = Arrays.stream(s.toLowerCase().split(whitespace))
                 .parallel()
                 .map(corpus::get)
                 .filter(Objects::nonNull).collect(Collectors.toList());
