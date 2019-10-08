@@ -5,7 +5,9 @@ Naive Bayes Spam Filter implementation in Java.
 * Java 11 or greater
 ### Usage
 * place the required zip into `./data/` and/or change the `data` variable in the `BayesSpamFilterStarter.java`
-* run using IDE or `./gradlew run`
+* run using IDE, `gradlew.bat run` on windows or `./gradlew run` with Git Bash or Linux.
+* for more detailed output set the `isDebug` variable to true in `BayerSpamFilterStarter.java`
+* feel free to play with the first few variables in the main method of `BayerSpamFilterStarter.java`
 ### Results
 We have chosen a PR_S of 0.5 and a SPAM_RECOGNITION_THRESHOLD of 0.9 as it leads to the best precision, which in this case, is more important than the recall.
 See https://en.wikipedia.org/wiki/Precision_and_recall for further information.
