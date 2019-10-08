@@ -6,22 +6,22 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static ch.fhnw.dist.BayesSpamFilterTrain.cleanStr;
+import static ch.fhnw.dist.BayesSpamFilterTrain.WHITESPACE;
 
 class BayesSpamFilter {
-    static Double THRESHOLD = 0.5;
     private final Map<String, Double> corpus;
 
-    public BayesSpamFilter(Map<String, Double> corpus) {
+    BayesSpamFilter(Map<String, Double> corpus) {
         this.corpus = corpus;
     }
 
     boolean isSpam(String text) {
-        return scoreText(text) > THRESHOLD;
+        return scoreText(text) > BayesSpamFilterTrain.SPAM_RECOGNITION_THRESHOLD;
     }
 
-    double scoreText(String s) {
-        List<Double> scores = Arrays.stream(cleanStr(s).split("\\s+"))
+    // first wikipedia formula
+    private double scoreText(String s) {
+        List<Double> scores = Arrays.stream(s.toLowerCase().split(WHITESPACE))
                 .parallel()
                 .map(corpus::get)
                 .filter(Objects::nonNull).collect(Collectors.toList());

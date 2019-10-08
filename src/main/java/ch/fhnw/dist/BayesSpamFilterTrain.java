@@ -14,12 +14,17 @@ import java.util.stream.StreamSupport;
 class BayesSpamFilterTrain {
 
     static Double PR_S = 0.5;
-    private static final Double PR_H = 1.0 - PR_S;
-    static Boolean DEBUG_CORPUS = false;
+    static Double SPAM_RECOGNITION_THRESHOLD = 0.5;
 
-    static String cleanStr(String s) {
-        return s.toLowerCase();
+    private static final Double PR_H = 1.0 - PR_S;
+
+    static class DebugHelper {
+       static boolean isDebug = false;
+       static double spamFilterRecognitionValue = 0.55;
+       static double hamFilterRecognitionValue = 0.45;
     }
+
+    static final String WHITESPACE = "\\s+";
 
     static BayesSpamFilter train(Path hamPath, Path spamPath) throws Exception {
         var ham = documentProbability(hamPath);
@@ -32,9 +37,9 @@ class BayesSpamFilterTrain {
             var Pr_WS = get(key, spam);
             return new Tuple2<>(key, Pr_WS * PR_S / (Pr_WS * PR_S + Pr_WH * PR_H));
         }).collect(Collectors.toMap(t -> t.t1, t -> t.t2));
-        if (DEBUG_CORPUS) {
+        if (DebugHelper.isDebug) {
             collect.entrySet().stream()
-                    .filter(stringDoubleEntry -> stringDoubleEntry.getValue() > 0.55 || stringDoubleEntry.getValue() < 0.45)
+                    .filter(stringDoubleEntry -> stringDoubleEntry.getValue() > DebugHelper.spamFilterRecognitionValue || stringDoubleEntry.getValue() < DebugHelper.hamFilterRecognitionValue)
                     .forEach((keyValue) -> System.out.println(keyValue.getKey() + keyValue.getValue()));
         }
 
@@ -61,6 +66,8 @@ class BayesSpamFilterTrain {
         System.out.println("False positives " + falsePositives);
         System.out.println("True negatives " + trueNegatives);
 
+        // see the following link for
+        // an explanation of precision and recall: https://en.wikipedia.org/wiki/Precision_and_recall
         System.out.println("Precision " + precision);
         System.out.println("Recall " + recall);
     }
@@ -84,12 +91,9 @@ class BayesSpamFilterTrain {
                 .spliterator(), true)
                 .flatMap(root -> ExOptional.orElse(() -> Files.walk(root), Stream::empty))
                 .map(path -> ExOptional.orElse(() -> Files.readString(path), () -> ""))
-                .map(BayesSpamFilterTrain::cleanStr)
-                //TODO could use a hash instead of regex split of whitespace
-                .map(s -> {
-                    String whitespace = "\\s+";
-                    return s.split(whitespace);
-                })
+                .map(String::toLowerCase)
+                // we could use a string hash instead of regex split of whitespace (performance improvement)
+                .map(s -> s.split(WHITESPACE))
                 .flatMap(strings -> Arrays.stream(strings).distinct())
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
     }

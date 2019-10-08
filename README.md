@@ -7,11 +7,13 @@ Naive Bayes Spam Filter implementation in Java.
 * place the required zip into `./data/` and/or change the `data` variable in the `BayesSpamFilterStarter.java`
 * run using IDE or `./gradlew run`
 ### Results
-We have chosen a PR_S of 0.5 and a THRESHOLD of 0.9 as it leads to the best precision, which in this case, is more important than the recall.
+We have chosen a PR_S of 0.5 and a SPAM_RECOGNITION_THRESHOLD of 0.9 as it leads to the best precision, which in this case, is more important than the recall.
+See https://en.wikipedia.org/wiki/Precision_and_recall for further information.
+
 ```
 > Task :run
 BayesSpamFilterTrain.PR_S = 0.5
-BayesSpamFilter.THRESHOLD = 0.9
+BayesSpamFilter.SPAM_RECOGNITION_THRESHOLD = 0.9
 Training Set: 
 Document count Tuple2{t1=1152, t2=38}
 Spam count Tuple2{t1=250, t2=179}
@@ -47,7 +49,7 @@ Recall 0.8609865470852018
 ```
 > Task :run
 BayesSpamFilterTrain.PR_S = 0.5
-BayesSpamFilter.THRESHOLD = 0.5
+BayesSpamFilter.SPAM_RECOGNITION_THRESHOLD = 0.5
 Training Set: 
 Document count Tuple2{t1=1152, t2=98}
 Spam count Tuple2{t1=250, t2=235}
@@ -82,7 +84,7 @@ Recall 0.9820627802690582
 ```
 > Task :run
 BayesSpamFilterTrain.PR_S = 0.8
-BayesSpamFilter.THRESHOLD = 0.5
+BayesSpamFilter.SPAM_RECOGNITION_THRESHOLD = 0.5
 Training Set: 
 Document count Tuple2{t1=1152, t2=497}
 Spam count Tuple2{t1=250, t2=246}
@@ -117,7 +119,7 @@ Recall 0.9910313901345291
 ```
 > Task :run
 BayesSpamFilterTrain.PR_S = 0.8
-BayesSpamFilter.THRESHOLD = 0.9
+BayesSpamFilter.SPAM_RECOGNITION_THRESHOLD = 0.9
 Training Set: 
 Document count Tuple2{t1=1152, t2=429}
 Spam count Tuple2{t1=250, t2=190}
