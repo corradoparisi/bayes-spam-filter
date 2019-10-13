@@ -28,8 +28,9 @@ public class BayesSpamFilterStarter {
         // to leave this value as is, since it would be worse to categorise accidentally
         // a ham document as a spam.
         BayesSpamFilterTrain.PR_S = 0.5;
+        BayesSpamFilterTrain.PR_H = 1.0 - BayesSpamFilterTrain.PR_S;
 
-        BayesSpamFilterTrain.SPAM_RECOGNITION_THRESHOLD = 0.90;
+        BayesSpamFilterTrain.SPAM_RECOGNITION_THRESHOLD = 0.9;
 
         System.out.println("BayesSpamFilterTrain.PR_S = " + BayesSpamFilterTrain.PR_S);
         System.out.println("BayesSpamFilter.THRESHOLD = " + BayesSpamFilterTrain.SPAM_RECOGNITION_THRESHOLD);

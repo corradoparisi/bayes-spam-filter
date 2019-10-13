@@ -13,18 +13,10 @@ import java.util.stream.StreamSupport;
 
 class BayesSpamFilterTrain {
 
+    static final String WHITESPACE = "\\s+";
     static Double PR_S = 0.5;
     static Double SPAM_RECOGNITION_THRESHOLD = 0.5;
-
-    private static final Double PR_H = 1.0 - PR_S;
-
-    static class DebugHelper {
-       static boolean isDebug = false;
-       static double spamFilterRecognitionValue = 0.55;
-       static double hamFilterRecognitionValue = 0.45;
-    }
-
-    static final String WHITESPACE = "\\s+";
+    static Double PR_H = 0.5;
 
     static BayesSpamFilter train(Path hamPath, Path spamPath) throws Exception {
         var ham = documentProbability(hamPath);
@@ -57,7 +49,7 @@ class BayesSpamFilterTrain {
 
         var precision = truePositives.doubleValue() / (truePositives + falsePositives);
         var recall = truePositives.doubleValue() / (truePositives + falseNegatives);
-
+        var accuracy = (truePositives.doubleValue() + trueNegatives) / (truePositives.doubleValue() + trueNegatives + falseNegatives + falsePositives);
         System.out.println("Document count " + hamCount);
         System.out.println("Spam count " + spamCount);
 
@@ -70,11 +62,11 @@ class BayesSpamFilterTrain {
         // an explanation of precision and recall: https://en.wikipedia.org/wiki/Precision_and_recall
         System.out.println("Precision " + precision);
         System.out.println("Recall " + recall);
+        System.out.println("Accuracy " + accuracy);
     }
 
-
     private static double get(String key, Map<String, Double> ham) {
-        return Math.max(0.01, ham.getOrDefault(key, 0.0));
+        return Math.max(0.000_000_1, ham.getOrDefault(key, 0.000_000_1));
     }
 
     private static long count(Path zip) throws Exception {
@@ -120,5 +112,11 @@ class BayesSpamFilterTrain {
                 .filter(bayesSpamFilter::isSpam)
                 .count();
         return new Tuple2<>(documentCount, spamCount);
+    }
+
+    static class DebugHelper {
+        static boolean isDebug = false;
+        static double spamFilterRecognitionValue = 0.55;
+        static double hamFilterRecognitionValue = 0.45;
     }
 }
