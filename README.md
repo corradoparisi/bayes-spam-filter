@@ -14,7 +14,6 @@ See https://en.wikipedia.org/wiki/Precision_and_recall for further information.
 
 ```
 > Task :run
-> Task :run
 BayesSpamFilterTrain.PR_S = 0.5
 BayesSpamFilter.THRESHOLD = 0.9
 Training Set: 
@@ -51,5 +50,3 @@ Recall 0.7937219730941704
 Accuracy 0.9538638985005767
 
 ```
-
-
