@@ -1,5 +1,7 @@
-# bayes-spam-filter
-Naive Bayes Spam Filter implementation in Java.
+# Bayes Spam Filter
+
+This naive implementation works by correlating the use of words with spam and non-spam e-mails and then using Bayes' theorem to calculate a probability that an email is or is not spam (ham).
+
 =======
 ### Requiremnets
 * Java 11 or greater
